@@ -12,6 +12,12 @@ io.on("connection", function(socket) {
   socket.on("turn", data => {
     io.emit("turn", data);
   });
+  socket.on("message", data => {
+    io.emit("message", data);
+  });
+  socket.on("replay", data => {
+    io.emit("replay", data);
+  });
 });
 
 http.listen(1802, function() {

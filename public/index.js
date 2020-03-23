@@ -103,12 +103,17 @@ class Board {
     if (tblX && tblX.length === 3) winner = "X";
     if (tblO && tblO.length === 3) winner = "O";
 
-    if (winner) this.showWinner(winner);
-  }
+    if (winner) socket.emit("message", `!${winner} HA GANADO!`);
 
-  showWinner(winner) {
-    document.getElementById("message").innerHTML = `!${winner} HA GANADO!`;
-    document.querySelector("button").style.display = "block";
+    let count = 0;
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        if (this.positions[i][j] === "X" || this.positions[i][j] === "O")
+          count++;
+      }
+    }
+
+    if (count === 9) socket.emit("message", `!EMPATE!`);
   }
 }
 
@@ -131,5 +136,12 @@ socket.on("drawPosition", ({ x, y, value }) => {
 });
 
 document.querySelector("button").addEventListener("click", () => {
-  console.log("jugar de nuevo");
+  socket.emit("replay", true);
+});
+
+socket.on("replay", () => window.location.reload());
+
+socket.on("message", message => {
+  document.getElementById("message").innerHTML = message;
+  document.querySelector("button").style.display = "block";
 });
