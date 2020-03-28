@@ -6,8 +6,16 @@ const io = require("socket.io")(http);
 app.use(express.static("public"));
 
 io.on("connection", function(socket) {
+  const symbol = {
+    O: "X",
+    X: "O"
+  };
   socket.on("drawPosition", data => {
     io.emit("drawPosition", data);
+  });
+  socket.on("symbol", data => {
+    socket.broadcast.emit("symbol", symbol[data]);
+    io.emit("turn", data);
   });
   socket.on("turn", data => {
     io.emit("turn", data);

@@ -21,8 +21,9 @@ class Board {
       }
     }
   }
-  setPosition(x, y, value) {
-    if (!this.positions[x][y]) {
+  setPosition(x, y, value, symbol) {
+    // Check if the column is empty and if it's my turn
+    if (!this.positions[x][y] && value === symbol) {
       this.positions[x][y] = value;
 
       socket.emit("drawPosition", { x, y, value });
@@ -120,6 +121,19 @@ class Board {
 let b = new Board(new Array());
 b.draw();
 
+function selectSymbol(symbol) {
+  sessionStorage.setItem("symbol", symbol);
+  socket.emit("symbol", symbol);
+  // Remove start screen
+  document.querySelector(".start-screen").remove();
+}
+
+socket.on("symbol", symbol => {
+  sessionStorage.setItem("symbol", symbol);
+  // Remove start screen
+  document.querySelector(".start-screen").remove();
+});
+
 const cols = document.querySelectorAll(".col[data-id]");
 
 cols.forEach(col => {
@@ -127,16 +141,13 @@ cols.forEach(col => {
     const index = this.dataset.id;
     const [x, y] = index;
     const turn = sessionStorage.getItem("turn");
-    b.setPosition(Number(x), Number(y), turn);
+    const symbol = sessionStorage.getItem("symbol");
+    b.setPosition(Number(x), Number(y), turn, symbol);
   });
 });
 
 socket.on("drawPosition", ({ x, y, value }) => {
   b.drawPosition(x, y, value);
-});
-
-document.querySelector("button").addEventListener("click", () => {
-  socket.emit("replay", true);
 });
 
 socket.on("replay", () => window.location.reload());
