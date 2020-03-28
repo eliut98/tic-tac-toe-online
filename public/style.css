@@ -9,6 +9,22 @@ body {
 
 #message {
     text-align: center;
+    transition: all 0.3s ease;
+}
+
+#message.win {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+button.win {
+    display: block;
+    position: fixed;
+    bottom: 25%;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .start-screen {
