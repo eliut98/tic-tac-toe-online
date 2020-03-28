@@ -79,6 +79,10 @@ function checkWinner(x, y) {
   return winner;
 }
 
+function isDraw() {
+  return positions.flat().length === 9;
+}
+
 io.on("connection", function(socket) {
   const symbol = {
     O: "X",
@@ -87,17 +91,18 @@ io.on("connection", function(socket) {
   socket.on("symbol", data => {
     socket.broadcast.emit("symbol", symbol[data]);
     init();
-    io.emit("turn", { turn: data, positions });
+    io.emit("turn", { turn: data });
   });
   socket.on("turn", ({ turn, x, y, value }) => {
     if (!positions[x][y]) {
       positions[x][y] = value;
       io.emit("drawPosition", { x, y, value });
-      io.emit("turn", { turn, positions });
+      io.emit("turn", { turn });
       if (checkWinner(x, y)) {
         const winner = checkWinner(x, y);
         io.emit("message", winner);
       }
+      if(isDraw() && ! checkWinner(x, y)) io.emit("draw", true);
     }
   });
   socket.on("replay", data => {
