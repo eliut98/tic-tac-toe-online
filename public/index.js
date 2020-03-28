@@ -1,19 +1,23 @@
 const socket = io();
+let positions = new Array();
 
-socket.on("turn", turn => {
+socket.on("turn", ({ turn, positions }) => {
+  const symbol = sessionStorage.getItem("symbol");
   sessionStorage.setItem("turn", turn);
+  positions = positions;
+  document.getElementById("message").innerHTML =
+    symbol === turn ? "TU TURNO" : `TURNO DE ${turn}`;
 });
 
 class Board {
-  constructor(positions) {
+  constructor() {
     document.getElementById("board").innerHTML = "";
-    this.positions = positions;
     this.board = document.getElementById("board");
   }
 
   draw() {
     for (let i = 0; i < 3; i++) {
-      this.positions[i] = new Array();
+      positions[i] = new Array();
       this.board.innerHTML += `<div class="row" data-id="${i}"></div>`;
       for (let j = 0; j < 3; j++) {
         const col = `<div class="col" data-id="${i}${j}"></div>`;
@@ -23,14 +27,14 @@ class Board {
   }
   setPosition(x, y, value, symbol) {
     // Check if the column is empty and if it's my turn
-    if (!this.positions[x][y] && value === symbol) {
-      this.positions[x][y] = value;
-
+    if (!positions[x][y] && value === symbol) {
+      positions[x][y] = value;
       socket.emit("drawPosition", { x, y, value });
-
       // Toggle turn
-      socket.emit("turn", value === "X" ? "O" : "X");
-
+      socket.emit("turn", {
+        turn: value === "X" ? "O" : "X",
+        positions
+      });
       this.checkWinner(x, y);
     }
   }
@@ -47,8 +51,8 @@ class Board {
     }
 
     // Horizontal
-    let hO = check(this.positions[x], "O");
-    let hX = check(this.positions[x], "X");
+    let hO = check(positions[x], "O");
+    let hX = check(positions[x], "X");
 
     if (hX && hX.length === 3) winner = "X";
     if (hO && hO.length === 3) winner = "O";
@@ -56,7 +60,7 @@ class Board {
     // Vertical
     let vertical = [];
     for (let i = 0; i < 3; i++) {
-      vertical[i] = this.positions[i][y];
+      vertical[i] = positions[i][y];
     }
 
     let vX = check(vertical, "X");
@@ -69,7 +73,7 @@ class Board {
     let tbr = [];
     if (x === y) {
       for (let i = 0; i < 3; i++) {
-        tbr[i] = this.positions[i][i];
+        tbr[i] = positions[i][i];
       }
     }
 
@@ -82,13 +86,13 @@ class Board {
     let tbl = new Array(3);
     switch ([x, y].join("")) {
       case "02":
-        updateTbl(this.positions);
+        updateTbl(positions);
         break;
       case "11":
-        updateTbl(this.positions);
+        updateTbl(positions);
         break;
       case "20":
-        updateTbl(this.positions);
+        updateTbl(positions);
         break;
     }
 
@@ -106,19 +110,11 @@ class Board {
 
     if (winner) socket.emit("message", `!${winner} HA GANADO!`);
 
-    let count = 0;
-    for (let i = 0; i < 3; i++) {
-      for (let j = 0; j < 3; j++) {
-        if (this.positions[i][j] === "X" || this.positions[i][j] === "O")
-          count++;
-      }
-    }
-
-    if (count === 9) socket.emit("message", `!EMPATE!`);
+    // if (count === 9) socket.emit("message", `!EMPATE!`);
   }
 }
 
-let b = new Board(new Array());
+let b = new Board();
 b.draw();
 
 function selectSymbol(symbol) {
@@ -126,6 +122,11 @@ function selectSymbol(symbol) {
   socket.emit("symbol", symbol);
   // Remove start screen
   document.querySelector(".start-screen").remove();
+}
+
+function reset() {
+  sessionStorage.clear();
+  socket.emit("replay", true);
 }
 
 socket.on("symbol", symbol => {

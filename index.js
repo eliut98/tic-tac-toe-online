@@ -15,10 +15,10 @@ io.on("connection", function(socket) {
   });
   socket.on("symbol", data => {
     socket.broadcast.emit("symbol", symbol[data]);
-    io.emit("turn", data);
+    io.emit("turn", { turn: data });
   });
-  socket.on("turn", data => {
-    io.emit("turn", data);
+  socket.on("turn", ({ turn, positions }) => {
+    io.emit("turn", { turn, positions });
   });
   socket.on("message", data => {
     io.emit("message", data);
