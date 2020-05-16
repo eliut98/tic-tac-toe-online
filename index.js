@@ -3,6 +3,8 @@ const app = express();
 const http = require("http").createServer(app);
 const io = require("socket.io")(http);
 
+app.set('port', proccess.env.PORT || 1802);
+
 app.use(express.static("public"));
 
 let positions = [];
@@ -110,6 +112,6 @@ io.on("connection", function(socket) {
   });
 });
 
-http.listen(1802, function() {
-  console.log("listening on *:1802");
+http.listen(app.get('port'), function() {
+  console.log("Server listening");
 });
